@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skillful | Pro Gaming Assessment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+        :root {
+            --theme-color: #0ea5e9; 
+            --theme-glow: rgba(14, 165, 233, 0.4);
+            --bg-color: #050810;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        [data-theme="cyberpunk"] {
+            --theme-color: #eab308;
+            --theme-glow: rgba(234, 179, 8, 0.4);
+        }
+
+        [data-theme="vaporwave"] {
+            --theme-color: #f472b6;
+            --theme-glow: rgba(244, 114, 182, 0.4);
+        }
+        
+        [data-theme="toxic"] {
+            --theme-color: #22c55e;
+            --theme-glow: rgba(34, 197, 94, 0.4);
+        }
+
+        [data-theme="blood"] {
+            --theme-color: #ef4444;
+            --theme-glow: rgba(239, 68, 68, 0.4);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255,255,255,0.015) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, var(--theme-glow) 0%, transparent 50%);
+            background-attachment: fixed;
+            transition: background-image 0.8s ease;
+        }
+
+        h1, h2, h3, .font-display {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: transparent;
+            border: 1px solid var(--theme-color);
+            color: var(--theme-color);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--theme-color);
+            z-index: -1;
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-primary:hover:not(:disabled)::before { transform: scaleY(1); }
+        .btn-primary:hover:not(:disabled) {
+            color: #000;
+            box-shadow: 0 0 25px var(--theme-glow);
+            border-color: transparent;
+        }
+        
+        .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; border-color: #334155; color: #475569; }
+
+        .theme-select-btn { border: 2px solid transparent; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
+        .theme-select-btn::after { content: ''; position: absolute; inset: -4px; border-radius: 0.6rem; border: 1px solid transparent; transition: all 0.3s; }
+        .theme-select-btn.active { transform: scale(0.95); }
+        .theme-select-btn.active::after { border-color: var(--theme-color); box-shadow: 0 0 15px var(--theme-glow) inset; }
+
+        input[type=text], select { background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); transition: all 0.3s; }
+        input[type=text]:focus, select:focus { border-color: var(--theme-color); box-shadow: 0 0 15px var(--theme-glow); }
+
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
+        input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: var(--theme-color); cursor: pointer; margin-top: -7px; box-shadow: 0 0 12px var(--theme-glow); transition: transform 0.1s; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+        .screen { display: none; min-height: 100vh; padding: 2rem 1rem; opacity: 0; transition: opacity 0.4s ease; }
+        .screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 1; animation: slideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        #reaction-area { transition: all 0.15s ease; }
+        
+        .game-target {
+            position: absolute;
+            background-color: var(--theme-color);
+            border-radius: 50%;
+            cursor: crosshair;
+            box-shadow: 0 0 20px var(--theme-glow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: scale(0);
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .game-target::after { content: ''; width: 25%; height: 25%; background: #fff; border-radius: 50%; }
+
+        @keyframes popIn { to { transform: scale(1); } }
+        @keyframes popOut { to { transform: scale(0); opacity: 0; } }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(-30px) scale(1.2); opacity: 0; } }
+
+        .feedback-text {
+            position: absolute;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            pointer-events: none;
+            animation: floatUp 0.6s ease forwards;
+            z-index: 50;
+        }
+
+        .memory-btn { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); transition: all 0.2s; }
+        .memory-btn.active { background: var(--theme-color); box-shadow: 0 0 25px var(--theme-glow); transform: scale(0.92); border-color: transparent; }
+        .skill-bar-fill { height: 100%; background-color: var(--theme-color); border-radius: 9999px; box-shadow: 0 0 15px var(--theme-glow); width: 0%; transition: width 1.8s cubic-bezier(0.22, 1, 0.36, 1); }
+        #apm-btn { transition: transform 0.05s, background-color 0.1s; }
+        #apm-btn:active { transform: scale(0.9); background-color: rgba(255,255,255,0.1); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--theme-color); border-radius: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- SCREEN 1: ONBOARDING -->
+    <div id="screen-onboarding" class="screen active">
+        <div class="glass-panel p-8 md:p-14 max-w-xl w-full text-center relative overflow-hidden">
+            <h1 class="text-5xl md:text-7xl font-black mb-1 tracking-tighter" style="color: var(--theme-color); text-shadow: 0 0 30px var(--theme-glow);">SKILLFUL</h1>
+            <p class="text-[var(--text-muted)] text-sm md:text-base mb-10 uppercase tracking-[0.2em]">Telemetry & Assessment</p>
+            
+            <div class="space-y-8 text-left">
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Player Alias</label>
+                    <input type="text" id="player-name" placeholder="Enter gamertag..." class="w-full rounded-lg px-5 py-3 text-white focus:outline-none transition-colors" autocomplete="off">
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Interface Theme</label>
+                    <div class="grid grid-cols-5 gap-3">
+                        <button class="theme-select-btn active h-12 rounded-lg bg-[#0ea5e9]" onclick="setTheme('default', this)"></button>
+                        <button class="theme-select-btn h-12 rounded-lg bg-[#eab308]" onclick="setTheme('cyberpunk', this)"></button>
+                        <button class="theme-select-btn h-12 rounded-lg bg-[#f472b6]" onclick="setTheme('vaporwave', this)"></button>
+                        <button class="theme-select-btn h-12 rounded-lg bg-[#22c55e]" onclick="setTheme('toxic', this)"></button>
+                        <button class="theme-select-btn h-12 rounded-lg bg-[#ef4444]" onclick="setTheme('blood', this)"></button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-widest text-gray-500 mb-2">Simulation Mode</label>
+                    <select id="difficulty-select" class="w-full rounded-lg px-5 py-3 text-white focus:outline-none appearance-none cursor-pointer">
+                        <option value="casual">Casual (Large targets, slower patterns)</option>
+                        <option value="ranked" selected>Ranked (Standard Esports Scaling)</option>
+                        <option value="pro">Pro (Micro targets, rapid patterns)</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="startAssessment()" class="btn-primary w-full py-4 rounded-lg mt-10 text-lg">Initialize Profile</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 2: SELF RATING -->
+    <div id="screen-self-rating" class="screen">
+        <div class="glass-panel p-8 md:p-10 max-w-4xl w-full">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 border-b border-white/5 pb-4">
+                <div>
+                    <h2 class="text-3xl font-display font-bold text-white">Phase 1: Tactical & Mental</h2>
+                    <p class="text-[var(--text-muted)] mt-1">Calibrate your macro abilities (1 = Novice, 10 = Master)</p>
+                </div>
+                <div class="mt-4 md:mt-0 text-sm font-bold text-[var(--theme-color)] bg-[var(--theme-color)]/10 px-4 py-2 rounded-full">
+                    <span id="rating-progress">0</span>/16 Rated
+                </div>
+            </div>
+            <div id="rating-container" class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6 max-h-[55vh] overflow-y-auto pr-4 pb-4"></div>
+            <div class="mt-8 flex justify-end">
+                <button onclick="finishSelfRating()" id="btn-next-rating" class="btn-primary px-10 py-3 rounded-lg w-full md:w-auto">Proceed to Mechanics</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: MINI GAMES INTRO -->
+    <div id="screen-games-intro" class="screen">
+        <div class="glass-panel p-10 max-w-3xl w-full text-center">
+            <h2 class="text-3xl font-display font-bold mb-3">Phase 2: Mechanical Calibration</h2>
+            <p class="text-[var(--text-muted)] mb-8">Five rigorous diagnostics to evaluate raw input and cognitive speed.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-left mb-10">
+                <div class="bg-black/30 p-4 rounded-xl border border-white/5"><h4 class="font-bold text-[var(--theme-color)] mb-1">1. Reaction</h4><p class="text-xs text-gray-400">Click on visual cue.</p></div>
+                <div class="bg-black/30 p-4 rounded-xl border border-white/5"><h4 class="font-bold text-[var(--theme-color)] mb-1">2. Precision</h4><p class="text-xs text-gray-400">Eliminate targets rapidly.</p></div>
+                <div class="bg-black/30 p-4 rounded-xl border border-white/5"><h4 class="font-bold text-[var(--theme-color)] mb-1">3. APM Check</h4><p class="text-xs text-gray-400">Maximize clicks in 5s.</p></div>
+                <div class="bg-black/30 p-4 rounded-xl border border-white/5"><h4 class="font-bold text-[var(--theme-color)] mb-1">4. Memory</h4><p class="text-xs text-gray-400">Replicate the sequence.</p></div>
+                <div class="bg-black/30 p-4 rounded-xl border border-white/5"><h4 class="font-bold text-[var(--theme-color)] mb-1">5. Cognition</h4><p class="text-xs text-gray-400">Identify correct colors.</p></div>
+            </div>
+            
+            <button onclick="startMiniGames()" class="btn-primary w-full py-4 rounded-lg text-lg">Commence Diagnostics</button>
+        </div>
+    </div>
+
+    <!-- MINI GAME 1: REACTION -->
+    <div id="screen-game-reaction" class="screen">
+        <div class="glass-panel p-8 max-w-3xl w-full text-center h-[65vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-display font-bold">Test 1: Reaction Time</h2><span class="text-xs tracking-widest uppercase text-gray-500">Mechanics 1/5</span></div>
+            <div id="reaction-area" class="flex-grow rounded-xl border border-white/10 flex items-center justify-center cursor-pointer bg-black/40 shadow-inner" onmousedown="handleReactionClick()">
+                <div class="text-center">
+                    <span id="reaction-text" class="text-3xl font-display font-bold text-gray-400 tracking-wide">Click to Initiate</span>
+                    <p id="reaction-subtext" class="text-sm text-gray-600 mt-2">Wait for the visual cue</p>
+                </div>
+            </div>
+            <div class="h-16 flex items-center justify-between mt-4">
+                <p id="reaction-result" class="text-2xl font-bold font-display"></p>
+                <button id="btn-next-game-1" onclick="nextGame(2)" class="btn-primary px-8 py-3 rounded-lg hidden">Next Module</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MINI GAME 2: AIM -->
+    <div id="screen-game-aim" class="screen">
+        <div class="glass-panel p-8 max-w-3xl w-full text-center h-[75vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-display font-bold">Test 2: Precision Aim</h2><span class="text-xs tracking-widest uppercase text-gray-500">Mechanics 2/5</span></div>
+            <div class="text-left text-sm text-[var(--theme-color)] mb-2 font-bold" id="aim-combo">Targets: 0 / 10</div>
+            <div id="aim-area" class="flex-grow rounded-xl border border-white/5 relative overflow-hidden bg-[#020408] cursor-crosshair shadow-inner">
+                <div id="aim-start-overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+                    <button id="aim-start-btn" onclick="startAimCountdown()" class="btn-primary px-8 py-3 rounded-lg">Start Sequence</button>
+                    <div id="aim-countdown" class="text-6xl font-display font-bold text-[var(--theme-color)] hidden mt-4">3</div>
+                </div>
+            </div>
+            <div class="h-16 flex items-center justify-between mt-4">
+                <p id="aim-result" class="text-2xl font-bold font-display"></p>
+                <button id="btn-next-game-2" onclick="nextGame(3)" class="btn-primary px-8 py-3 rounded-lg hidden">Next Module</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MINI GAME 3: APM -->
+    <div id="screen-game-apm" class="screen">
+        <div class="glass-panel p-8 max-w-3xl w-full text-center h-[65vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-display font-bold">Test 3: APM</h2><span class="text-xs tracking-widest uppercase text-gray-500">Mechanics 3/5</span></div>
+            <div class="flex-grow flex flex-col items-center justify-center relative">
+                <div class="absolute top-4 left-1/2 transform -translate-x-1/2 w-64 h-2 bg-gray-800 rounded-full overflow-hidden hidden" id="apm-timer-bar-container"><div id="apm-timer-bar" class="h-full bg-[var(--theme-color)] w-full"></div></div>
+                <div class="text-6xl font-display font-black text-white/10 mb-8 select-none" id="apm-counter">0</div>
+                <button id="apm-btn" class="w-40 h-40 rounded-full bg-black/40 border-2 border-[var(--theme-color)] flex items-center justify-center text-[var(--theme-color)] shadow-[0_0_30px_var(--theme-glow)]" onmousedown="handleApmClick()">
+                    <span class="font-display font-bold text-xl uppercase tracking-widest">Strike</span>
+                </button>
+            </div>
+            <div class="h-16 flex items-center justify-between mt-4">
+                <p id="apm-result" class="text-2xl font-bold font-display"></p>
+                <button id="btn-next-game-3" onclick="nextGame(4)" class="btn-primary px-8 py-3 rounded-lg hidden">Next Module</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MINI GAME 4: MEMORY -->
+    <div id="screen-game-memory" class="screen">
+        <div class="glass-panel p-8 max-w-3xl w-full text-center h-[75vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-display font-bold">Test 4: Memory</h2><span class="text-xs tracking-widest uppercase text-gray-500">Mechanics 4/5</span></div>
+            <div class="flex justify-between items-center mb-4">
+                <p class="text-sm font-bold text-gray-400">Level: <span id="memory-level" class="text-white">1</span></p>
+                <p id="memory-status" class="text-sm text-[var(--theme-color)] animate-pulse">Awaiting Initialization...</p>
+            </div>
+            <div class="flex-grow flex items-center justify-center">
+                <div class="grid grid-cols-3 gap-3 w-full max-w-sm aspect-square" id="memory-grid"></div>
+            </div>
+            <div class="h-16 flex items-center justify-between mt-4">
+                <button id="memory-start-btn" onclick="startMemoryGame()" class="btn-primary px-8 py-3 rounded-lg mx-auto">Start Sequence</button>
+                <p id="memory-result" class="text-2xl font-bold font-display hidden"></p>
+                <button id="btn-next-game-4" onclick="nextGame(5)" class="btn-primary px-8 py-3 rounded-lg hidden">Next Module</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MINI GAME 5: COGNITION -->
+    <div id="screen-game-cognition" class="screen">
+        <div class="glass-panel p-8 max-w-3xl w-full text-center h-[75vh] flex flex-col">
+            <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-display font-bold">Test 5: Target ID</h2><span class="text-xs tracking-widest uppercase text-gray-500">Mechanics 5/5</span></div>
+            <div class="text-left text-sm text-[var(--theme-color)] mb-2 font-bold flex justify-between">
+                <span>Score: <span id="cog-score">0</span></span>
+                <span class="text-red-400">Misses: <span id="cog-miss">0</span> / 3</span>
+            </div>
+            <div id="cog-area" class="flex-grow rounded-xl border border-white/5 relative overflow-hidden bg-[#020408] cursor-crosshair shadow-inner">
+                <div id="cog-start-overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-10">
+                    <p class="mb-4 text-sm max-w-xs text-gray-300">Click <span class="text-green-400 font-bold">GREEN</span> targets. Ignore <span class="text-red-500 font-bold">RED</span> targets.</p>
+                    <button id="cog-start-btn" onclick="startCogGame()" class="btn-primary px-8 py-3 rounded-lg">Start Sequence</button>
+                </div>
+            </div>
+            <div class="h-16 flex items-center justify-between mt-4">
+                <p id="cog-result" class="text-2xl font-bold font-display"></p>
+                <button id="btn-next-game-5" onclick="calculateFinalResults()" class="btn-primary px-8 py-3 rounded-lg hidden">Generate Report</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN FINAL: RESULTS -->
+    <div id="screen-results" class="screen">
+        <div class="glass-panel p-8 max-w-4xl w-full h-[85vh] flex flex-col">
+            <div class="flex justify-between items-end border-b border-white/10 pb-4 mb-6">
+                <div><h2 class="text-4xl font-display font-black text-[var(--theme-color)]">Performance Report</h2><p class="text-[var(--text-muted)] text-sm tracking-widest uppercase mt-1">Alias: <span id="res-name" class="text-white"></span></p></div>
+                <div class="text-right"><div class="text-xs text-gray-500 uppercase tracking-wider mb-1">Global Rating</div><div class="text-5xl font-display font-black" id="res-overall">0</div></div>
+            </div>
+            <div class="flex-grow overflow-y-auto pr-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-black/30 p-5 rounded-xl border border-white/5">
+                        <h3 class="font-display font-bold text-xl mb-4 border-b border-white/5 pb-2">Macro & Mental (Self-Rated)</h3>
+                        <div id="res-macro-bars" class="space-y-3"></div>
+                    </div>
+                    <div class="bg-black/30 p-5 rounded-xl border border-white/5">
+                        <h3 class="font-display font-bold text-xl mb-4 border-b border-white/5 pb-2">Mechanical Diagnostics</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="bg-[#020408] p-3 rounded-lg"><div class="text-xs text-gray-500 uppercase">Reaction</div><div class="text-2xl font-bold text-white mt-1" id="res-mech-reaction">-</div></div>
+                            <div class="bg-[#020408] p-3 rounded-lg"><div class="text-xs text-gray-500 uppercase">Precision (Speed)</div><div class="text-2xl font-bold text-white mt-1" id="res-mech-aim">-</div></div>
+                            <div class="bg-[#020408] p-3 rounded-lg"><div class="text-xs text-gray-500 uppercase">Peak APM</div><div class="text-2xl font-bold text-white mt-1" id="res-mech-apm">-</div></div>
+                            <div class="bg-[#020408] p-3 rounded-lg"><div class="text-xs text-gray-500 uppercase">Working Memory</div><div class="text-2xl font-bold text-white mt-1" id="res-mech-memory">-</div></div>
+                            <div class="bg-[#020408] p-3 rounded-lg col-span-2"><div class="text-xs text-gray-500 uppercase">Cognitive Identification (Score)</div><div class="text-2xl font-bold text-white mt-1" id="res-mech-cog">-</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="bg-black/30 p-5 rounded-xl border border-white/5 h-full flex flex-col">
+                        <h3 class="font-display font-bold text-xl mb-4 border-b border-white/5 pb-2">Playstyle Profile</h3>
+                        <div class="flex-grow flex flex-col items-center justify-center text-center space-y-4">
+                            <div id="res-archetype-icon" class="text-6xl mb-2 text-[var(--theme-color)] drop-shadow-[0_0_15px_var(--theme-glow)]">⚔️</div>
+                            <h4 id="res-archetype-name" class="text-2xl font-display font-black text-white uppercase tracking-wider">Loading</h4>
+                            <p id="res-archetype-desc" class="text-sm text-gray-400 leading-relaxed"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-white/10 flex justify-center"><button onclick="location.reload()" class="btn-primary px-10 py-3 rounded-lg">Restart Diagnostics</button></div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            theme: 'default',
+            playerName: '',
+            difficulty: 'ranked',
+            ratings: {},
+            mechScores: { reaction: 0, aim: 0, apm: 0, memory: 0, cognition: 0 },
+            activeScreen: 'onboarding'
+        };
+
+        const ratingCategories = [
+            "Game Sense", "Decision Making", "Map Awareness", "Communication",
+            "Tilting Resistance", "Adaptability", "Leadership", "Clutch Factor",
+            "Economy Management", "Crosshair Placement", "Movement Mechanics", "Utility Usage",
+            "Target Selection", "Farming/CS", "Positioning", "VOD Review Habit"
+        ];
+
+        // System Settings based on difficulty
+        const diffSettings = {
+            casual: { targetSize: 60, aimCount: 10, cogSpeed: 1500, memSpeed: 800 },
+            ranked: { targetSize: 45, aimCount: 15, cogSpeed: 1000, memSpeed: 500 },
+            pro: { targetSize: 25, aimCount: 20, cogSpeed: 600, memSpeed: 300 }
+        };
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+            state.activeScreen = screenId;
+        }
+
+        function setTheme(themeName, btn) {
+            document.documentElement.setAttribute('data-theme', themeName);
+            state.theme = themeName;
+            document.querySelectorAll('.theme-select-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function generateRatingUI() {
+            const container = document.getElementById('rating-container');
+            container.innerHTML = '';
+            ratingCategories.forEach((cat, i) => {
+                const id = `rate-${i}`;
+                state.ratings[id] = 5;
+                const html = `
+                    <div class="bg-black/20 p-4 rounded-xl border border-white/5">
+                        <div class="flex justify-between mb-2"><label class="text-sm font-bold uppercase tracking-wider text-gray-300">${cat}</label><span id="${id}-val" class="text-[var(--theme-color)] font-display font-bold">5</span></div>
+                        <input type="range" min="1" max="10" value="5" id="${id}" class="w-full" oninput="updateRating('${id}', this.value)">
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function updateRating(id, val) {
+            document.getElementById(`${id}-val`).innerText = val;
+            state.ratings[id] = parseInt(val);
+        }
+
+        function startAssessment() {
+            const nameInput = document.getElementById('player-name').value.trim();
+            if (!nameInput) { alert("Please enter a Player Alias."); return; }
+            state.playerName = nameInput;
+            state.difficulty = document.getElementById('difficulty-select').value;
+            generateRatingUI();
+            switchScreen('self-rating');
+        }
+
+        function finishSelfRating() { switchScreen('games-intro'); }
+        function startMiniGames() { switchScreen('game-reaction'); startReactionGame(); }
+        function nextGame(num) { 
+            const games = ['reaction', 'aim', 'apm', 'memory', 'cognition'];
+            switchScreen(`game-${games[num-1]}`);
+            if (num === 4) initializeMemoryGrid();
+        }
+
+        function spawnFeedbackText(x, y, text, color) {
+            const el = document.createElement('div');
+            el.className = 'feedback-text';
+            el.innerText = text;
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+            el.style.color = color;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 600);
+        }
+
+        /* --- GAME 1: REACTION --- */
+        let rxState = 'waiting', rxTimeout, rxStart;
+        function startReactionGame() {
+            const area = document.getElementById('reaction-area');
+            const txt = document.getElementById('reaction-text');
+            const sub = document.getElementById('reaction-subtext');
+            
+            rxState = 'waiting';
+            area.style.backgroundColor = 'rgba(0,0,0,0.4)';
+            area.style.borderColor = 'rgba(255,255,255,0.1)';
+            txt.innerText = 'Wait for it...';
+            txt.style.color = '#ef4444';
+            sub.innerText = 'Do not click yet.';
+            
+            document.getElementById('reaction-result').innerText = '';
+            document.getElementById('btn-next-game-1').classList.add('hidden');
+            
+            const delay = Math.random() * 3000 + 1500;
+            rxTimeout = setTimeout(() => {
+                rxState = 'ready';
+                area.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+                area.style.borderColor = '#22c55e';
+                txt.innerText = 'CLICK!';
+                txt.style.color = '#22c55e';
+                sub.innerText = '';
+                rxStart = Date.now();
+            }, delay);
+        }
+        function handleReactionClick() {
+            if(rxState === 'waiting') {
+                clearTimeout(rxTimeout);
+                document.getElementById('reaction-text').innerText = 'Too Early!';
+                setTimeout(startReactionGame, 1000);
+            } else if(rxState === 'ready') {
+                rxState = 'done';
+                const time = Date.now() - rxStart;
+                state.mechScores.reaction = time;
+                document.getElementById('reaction-text').innerText = `${time}ms`;
+                document.getElementById('reaction-text').style.color = 'var(--text-main)';
+                document.getElementById('reaction-result').innerText = `Score: ${time}ms`;
+                document.getElementById('btn-next-game-1').classList.remove('hidden');
+                document.getElementById('reaction-area').style.backgroundColor = 'transparent';
+                document.getElementById('reaction-area').style.borderColor = 'var(--theme-color)';
+            }
+        }
+
+        /* --- GAME 2: AIM --- */
+        let aimCount = 0, aimStart, aimTargetCount;
+        function startAimCountdown() {
+            document.getElementById('aim-start-btn').classList.add('hidden');
+            const cd = document.getElementById('aim-countdown');
+            cd.classList.remove('hidden');
+            let count = 3;
+            cd.innerText = count;
+            const int = setInterval(() => {
+                count--;
+                if(count > 0) { cd.innerText = count; } 
+                else { clearInterval(int); document.getElementById('aim-start-overlay').classList.add('hidden'); startAimGame(); }
+            }, 800);
+        }
+        function startAimGame() {
+            aimCount = 0;
+            aimTargetCount = diffSettings[state.difficulty].aimCount;
+            document.getElementById('aim-combo').innerText = `Targets: 0 / ${aimTargetCount}`;
+            aimStart = Date.now();
+            spawnAimTarget();
+        }
+        function spawnAimTarget() {
+            if(aimCount >= aimTargetCount) {
+                const time = ((Date.now() - aimStart)/1000).toFixed(2);
+                state.mechScores.aim = time;
+                document.getElementById('aim-result').innerText = `Time: ${time}s`;
+                document.getElementById('btn-next-game-2').classList.remove('hidden');
+                return;
+            }
+            const area = document.getElementById('aim-area');
+            const t = document.createElement('div');
+            t.className = 'game-target';
+            
+            const size = diffSettings[state.difficulty].targetSize;
+            t.style.width = `${size}px`;
+            t.style.height = `${size}px`;
+            
+            const maxX = area.clientWidth - size - 20;
+            const maxY = area.clientHeight - size - 20;
+            t.style.left = `${Math.max(10, Math.random() * maxX)}px`;
+            t.style.top = `${Math.max(10, Math.random() * maxY)}px`;
+            
+            t.onmousedown = (e) => {
+                aimCount++;
+                spawnFeedbackText(e.clientX, e.clientY, "+1", "var(--theme-color)");
+                document.getElementById('aim-combo').innerText = `Targets: ${aimCount} / ${aimTargetCount}`;
+                t.remove();
+                spawnAimTarget();
+            };
+            area.appendChild(t);
+        }
+
+        /* --- GAME 3: APM --- */
+        let apmClicks = 0, apmActive = false;
+        function handleApmClick() {
+            if(!apmActive && apmClicks === 0) {
+                apmActive = true;
+                const barContainer = document.getElementById('apm-timer-bar-container');
+                const bar = document.getElementById('apm-timer-bar');
+                barContainer.classList.remove('hidden');
+                
+                bar.style.transition = 'none';
+                bar.style.width = '100%';
+                
+                setTimeout(() => {
+                    bar.style.transition = 'width 5s linear';
+                    bar.style.width = '0%';
+                }, 50);
+
+                setTimeout(() => {
+                    apmActive = false;
+                    const apm = apmClicks * 12; // 5 seconds * 12 = 60s
+                    state.mechScores.apm = apm;
+                    document.getElementById('apm-result').innerText = `Est. APM: ${apm}`;
+                    document.getElementById('btn-next-game-3').classList.remove('hidden');
+                    document.getElementById('apm-btn').disabled = true;
+                }, 5000);
+            }
+            if(apmActive) {
+                apmClicks++;
+                document.getElementById('apm-counter').innerText = apmClicks;
+                document.getElementById('apm-counter').style.color = `rgba(255,255,255, ${Math.min(1, 0.1 + apmClicks*0.02)})`;
+            }
+        }
+
+        /* --- GAME 4: MEMORY --- */
+        let memSeq = [], memPlayerSeq = [], memLevel = 1;
+        function initializeMemoryGrid() {
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            for(let i=0; i<9; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'memory-btn rounded-xl';
+                btn.id = `mem-btn-${i}`;
+                btn.onclick = () => handleMemoryClick(i);
+                grid.appendChild(btn);
+            }
+        }
+        function startMemoryGame() {
+            document.getElementById('memory-start-btn').classList.add('hidden');
+            memLevel = 1;
+            memSeq = [];
+            playMemorySequence();
+        }
+        function playMemorySequence() {
+            document.getElementById('memory-level').innerText = memLevel;
+            document.getElementById('memory-status').innerText = 'Memorize...';
+            document.getElementById('memory-status').style.color = '#ef4444';
+            memPlayerSeq = [];
+            memSeq.push(Math.floor(Math.random() * 9));
+            
+            let i = 0;
+            const speed = diffSettings[state.difficulty].memSpeed;
+            const int = setInterval(() => {
+                if(i >= memSeq.length) {
+                    clearInterval(int);
+                    document.getElementById('memory-status').innerText = 'Your Turn';
+                    document.getElementById('memory-status').style.color = '#22c55e';
+                    return;
+                }
+                const btn = document.getElementById(`mem-btn-${memSeq[i]}`);
+                btn.classList.add('active');
+                setTimeout(() => btn.classList.remove('active'), speed * 0.8);
+                i++;
+            }, speed);
+        }
+        function handleMemoryClick(idx) {
+            if(document.getElementById('memory-status').innerText !== 'Your Turn') return;
+            
+            const btn = document.getElementById(`mem-btn-${idx}`);
+            btn.classList.add('active');
+            setTimeout(() => btn.classList.remove('active'), 200);
+
+            memPlayerSeq.push(idx);
+            if(memPlayerSeq[memPlayerSeq.length-1] !== memSeq[memPlayerSeq.length-1]) {
+                state.mechScores.memory = memLevel - 1;
+                document.getElementById('memory-status').innerText = 'Sequence Failed';
+                document.getElementById('memory-result').innerText = `Max Level: ${memLevel - 1}`;
+                document.getElementById('memory-result').classList.remove('hidden');
+                document.getElementById('btn-next-game-4').classList.remove('hidden');
+            } else if(memPlayerSeq.length === memSeq.length) {
+                memLevel++;
+                setTimeout(playMemorySequence, 1000);
+            }
+        }
+
+        /* --- GAME 5: COGNITION (TARGET ID) --- */
+        let cogInterval, cogActive = false, cogScore = 0, cogMisses = 0;
+        function startCogGame() {
+            document.getElementById('cog-start-overlay').classList.add('hidden');
+            cogActive = true;
+            cogScore = 0;
+            cogMisses = 0;
+            updateCogUI();
+            
+            const speed = diffSettings[state.difficulty].cogSpeed;
+            spawnCogTarget();
+            cogInterval = setInterval(spawnCogTarget, speed);
+        }
+        function updateCogUI() {
+            document.getElementById('cog-score').innerText = cogScore;
+            document.getElementById('cog-miss').innerText = cogMisses;
+        }
+        function spawnCogTarget() {
+            if(!cogActive) return;
+            const area = document.getElementById('cog-area');
+            const isGreen = Math.random() > 0.4; // 60% chance green
+            
+            const t = document.createElement('div');
+            t.className = 'game-target';
+            const size = diffSettings[state.difficulty].targetSize + 10; // Slightly larger than aim targets
+            t.style.width = `${size}px`;
+            t.style.height = `${size}px`;
+            t.style.backgroundColor = isGreen ? '#22c55e' : '#ef4444';
+            t.style.boxShadow = isGreen ? '0 0 15px rgba(34,197,94,0.5)' : '0 0 15px rgba(239,68,68,0.5)';
+            
+            const maxX = area.clientWidth - size - 20;
+            const maxY = area.clientHeight - size - 20;
+            t.style.left = `${Math.max(10, Math.random() * maxX)}px`;
+            t.style.top = `${Math.max(10, Math.random() * maxY)}px`;
+
+            // Auto-despawn
+            const lifetime = diffSettings[state.difficulty].cogSpeed * 1.5;
+            let despawnTimer = setTimeout(() => {
+                if(t.parentNode) {
+                    if(isGreen) {
+                        cogMisses++;
+                        spawnFeedbackText(t.getBoundingClientRect().left, t.getBoundingClientRect().top, "MISS", "#ef4444");
+                        checkCogEnd();
+                    }
+                    t.remove();
+                }
+            }, lifetime);
+
+            t.onmousedown = (e) => {
+                clearTimeout(despawnTimer);
+                if(isGreen) {
+                    cogScore += 100;
+                    spawnFeedbackText(e.clientX, e.clientY, "+100", "#22c55e");
+                } else {
+                    cogMisses++;
+                    spawnFeedbackText(e.clientX, e.clientY, "WRONG", "#ef4444");
+                    checkCogEnd();
+                }
+                updateCogUI();
+                t.remove();
+            };
+            area.appendChild(t);
+        }
+        function checkCogEnd() {
+            updateCogUI();
+            if(cogMisses >= 3) {
+                cogActive = false;
+                clearInterval(cogInterval);
+                document.getElementById('cog-area').innerHTML = ''; // clear targets
+                state.mechScores.cognition = cogScore;
+                document.getElementById('cog-result').innerText = `Score: ${cogScore}`;
+                document.getElementById('btn-next-game-5').classList.remove('hidden');
+            }
+        }
+
+        /* --- RESULTS --- */
+        function calculateFinalResults() {
+            switchScreen('results');
+            document.getElementById('res-name').innerText = state.playerName;
+
+            // Render Macro Ratings
+            const bars = document.getElementById('res-macro-bars');
+            bars.innerHTML = '';
+            let macroTotal = 0;
+            Object.keys(state.ratings).forEach((k, i) => {
+                const val = state.ratings[k];
+                macroTotal += val;
+                bars.innerHTML += `
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-400 mb-1"><span>${ratingCategories[i]}</span><span>${val}/10</span></div>
+                        <div class="h-1.5 bg-gray-800 rounded-full overflow-hidden"><div class="skill-bar-fill" style="width: ${val*10}%"></div></div>
+                    </div>
+                `;
+            });
+            
+            // Render Mechs
+            document.getElementById('res-mech-reaction').innerText = state.mechScores.reaction ? `${state.mechScores.reaction}ms` : 'N/A';
+            document.getElementById('res-mech-aim').innerText = state.mechScores.aim ? `${state.mechScores.aim}s` : 'N/A';
+            document.getElementById('res-mech-apm').innerText = state.mechScores.apm || 'N/A';
+            document.getElementById('res-mech-memory').innerText = `Lvl ${state.mechScores.memory || 0}`;
+            document.getElementById('res-mech-cog').innerText = state.mechScores.cognition || 0;
+
+            // Algorithm for Overall Score
+            let score = 0;
+            const macroAvg = (macroTotal / 16) * 10; // Out of 100
+            
+            // Normalize mech scores (simplified)
+            let rxScore = Math.max(0, 100 - ((state.mechScores.reaction - 150) / 2)); // 150ms = 100, 350ms = 0
+            let aimScore = Math.max(0, 100 - (state.mechScores.aim * 3)); // lower is better
+            let apmScore = Math.min(100, state.mechScores.apm / 3); // 300 apm = 100
+            let memScore = Math.min(100, state.mechScores.memory * 10);
+            let cogNormScore = Math.min(100, state.mechScores.cognition / 20); // 2000 score = 100
+            
+            score = (macroAvg * 0.3) + (rxScore * 0.15) + (aimScore * 0.15) + (apmScore * 0.1) + (memScore * 0.1) + (cogNormScore * 0.2);
+            document.getElementById('res-overall').innerText = Math.round(score || 0);
+
+            // Determine Archetype
+            let arch = { icon: '🎯', name: 'All-Rounder', desc: 'Balanced fundamentals across macro and micro execution.' };
+            if (rxScore > 85 && aimScore > 85) arch = { icon: '⚡', name: 'Entry Fragger', desc: 'Relies on raw mechanical superiority and twitch reflexes.' };
+            else if (macroAvg > 80 && apmScore < 50) arch = { icon: '🧠', name: 'Tactician', desc: 'Wins through superior positioning, utility, and brain-power over raw aim.' };
+            else if (apmScore > 80 && memScore > 70) arch = { icon: '🎹', name: 'Mechanist', desc: 'High APM executioner. Thrives in complex, high-input scenarios.' };
+            else if (cogNormScore > 80 && macroAvg > 70) arch = { icon: '👁️', name: 'Sentinel', desc: 'Unshakable focus. Processes visual information and executes perfectly.' };
+
+            document.getElementById('res-archetype-icon').innerText = arch.icon;
+            document.getElementById('res-archetype-name').innerText = arch.name;
+            document.getElementById('res-archetype-desc').innerText = arch.desc;
+            document.getElementById('res-archetype-name').style.color = 'var(--theme-color)';
+        }
+    </script>
+</body>
+</html>
